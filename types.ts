@@ -21,6 +21,7 @@ export interface Category {
 
 export interface GameLevel {
   difficulty: Difficulty;
+  levelNumber: number;
   categories: Category[];
   words: Word[];
 }
@@ -36,6 +37,7 @@ export interface AppState {
   user: UserProgress | null;
   gameState: 'LOBBY' | 'PLAYING' | 'COMPLETED' | 'LOADING';
   currentLevel: GameLevel | null;
+  currentLevelNumber: number;
   selectedWordIds: string[];
   mistakeCount: number;
   timer: number;

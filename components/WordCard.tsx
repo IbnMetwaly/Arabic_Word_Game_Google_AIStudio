@@ -27,17 +27,17 @@ export const WordCard: React.FC<WordCardProps> = ({ word, isSelected, isWrong, o
       onClick={!word.isSolved ? onClick : undefined}
       className={`
         relative ${getStyles()}
-        h-20 sm:h-24 flex items-center justify-center p-2 text-center
-        border-b-4 rounded-2xl transition-all duration-200 select-none
-        font-bold text-lg sm:text-xl md:text-2xl
+        h-14 sm:h-20 md:h-24 flex items-center justify-center p-1 text-center
+        border-b-4 rounded-xl transition-all duration-200 select-none
+        font-bold text-base sm:text-lg md:text-2xl
       `}
     >
       {isSelected && !word.isSolved && (
-        <div className="absolute top-2 right-2 w-4 h-4 bg-white rounded-full flex items-center justify-center animate-bounce shadow-sm">
-          <div className="w-2 h-2 bg-amber-600 rounded-full" />
+        <div className="absolute top-1 right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center animate-bounce shadow-sm sm:w-4 sm:h-4">
+          <div className="w-1.5 h-1.5 bg-amber-600 rounded-full sm:w-2 sm:h-2" />
         </div>
       )}
-      {word.text}
+      <span className="leading-tight line-clamp-2">{word.text}</span>
     </div>
   );
 };

@@ -32,13 +32,15 @@ const levelSchema = {
   required: ["categories"]
 };
 
-export async function generateLevel(difficulty: Difficulty): Promise<GameLevel> {
+export async function generateLevel(difficulty: Difficulty, levelNumber: number): Promise<GameLevel> {
   const prompt = `
     Generate a 4x6 grid game data for an Arabic word sorting game called 'Rabt'.
-    Difficulty: ${difficulty}.
+    Stage: ${difficulty}.
+    Level Index: ${levelNumber} of 3.
     Rules:
     - Create 6 unique categories of 4 words each (Total 24 words).
     - Logic should follow Modern Standard Arabic (MSA).
+    - Vary the themes based on the Level Index (${levelNumber}) to ensure Level 1, 2, and 3 feel distinct.
     - Beginner: Easy 3-4 letter words (Colors, Fruits, Simple Verbs).
     - Intermediate: 4-6 letter words, synonyms, tools, or semantic groups.
     - Expert: Complex morphology (Awzan), literary roots, rare but meaningful vocabulary.
@@ -78,6 +80,7 @@ export async function generateLevel(difficulty: Difficulty): Promise<GameLevel> 
 
   return {
     difficulty,
+    levelNumber,
     categories,
     words: shuffledWords
   };
