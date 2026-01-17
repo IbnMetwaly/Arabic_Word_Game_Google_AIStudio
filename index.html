@@ -1,77 +1,91 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>رَبْط | Rabt</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover" />
+    <meta name="theme-color" content="#F59E0B" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>رَبْط | Rabt - Arabic Word Game</title>
+    <link rel="manifest" href="manifest.json" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     <style>
+      :root {
+        --app-height: 100dvh;
+      }
       body {
         font-family: 'Tajawal', sans-serif;
-        background-color: #FFFBEB; /* Soft joyful yellow */
+        background-color: #FFFBEB;
         overflow-x: hidden;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        height: var(--app-height);
+        margin: 0;
       }
+      
       @keyframes shake {
         0%, 100% { transform: translateX(0); }
-        25% { transform: translateX(-5px); }
-        75% { transform: translateX(5px); }
+        25% { transform: translateX(-6px) rotate(-1deg); }
+        75% { transform: translateX(6px) rotate(1deg); }
       }
       .animate-shake {
         animation: shake 0.2s cubic-bezier(.36,.07,.19,.97) both;
-        animation-iteration-count: 2;
+        animation-iteration-count: 3;
       }
+      
       @keyframes selection-bounce {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.05); }
+        0% { transform: scale(1); }
+        50% { transform: scale(1.08); }
+        100% { transform: scale(1.05); }
       }
       .animate-selection-bounce {
         animation: selection-bounce 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
       }
+      
       @keyframes pulse-ring {
         0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
-        70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+        70% { box-shadow: 0 0 0 15px rgba(245, 158, 11, 0); }
         100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
       }
       .animate-pulse-ring {
-        animation: pulse-ring 1.5s infinite;
+        animation: pulse-ring 1.8s infinite;
       }
+      
       @keyframes solve-pop {
         0% { transform: scale(1); }
-        40% { transform: scale(1.15); background-color: #10b981; color: white; }
-        100% { transform: scale(1.02); }
+        30% { transform: scale(1.2); filter: brightness(1.1); }
+        100% { transform: scale(1.0); opacity: 0.6; }
       }
       .animate-solve-pop {
-        animation: solve-pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        animation: solve-pop 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
       }
+      
       @keyframes success-reveal {
-        0% { transform: scale(0.5); opacity: 0; }
-        70% { transform: scale(1.1); opacity: 1; }
-        100% { transform: scale(1); opacity: 1; }
+        0% { transform: translateY(20px) scale(0.8); opacity: 0; filter: blur(4px); }
+        100% { transform: translateY(0) scale(1); opacity: 1; filter: blur(0); }
       }
       .animate-success-reveal {
-        animation: success-reveal 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        animation: success-reveal 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
       }
+      
       .glossy-3d {
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        box-shadow: inset 0 2px 4px rgba(255,255,255,0.6), 0 6px 0 -1px rgba(0,0,0,0.05), 0 8px 15px -3px rgba(0,0,0,0.1);
       }
-      .selected-indicator {
-        position: absolute;
-        top: 0.5rem;
-        right: 0.5rem;
-        width: 1rem;
-        height: 1rem;
-        background-color: white;
-        border-radius: 9999px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      
+      input:focus {
+        font-size: 16px;
       }
-      .perspective-1000 {
-        perspective: 1000px;
+
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
       }
     </style>
   <script type="importmap">
