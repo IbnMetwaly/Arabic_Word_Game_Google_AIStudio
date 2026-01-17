@@ -15,6 +15,8 @@ const App: React.FC = () => {
     selectedWordIds: [],
     mistakeCount: 0,
     timer: 0,
+    activeHint: null,
+    hintUsedCount: 0,
   });
 
   const [isWrongGroup, setIsWrongGroup] = useState(false);
@@ -50,7 +52,9 @@ const App: React.FC = () => {
       timer: 0, 
       mistakeCount: 0, 
       selectedWordIds: [],
-      currentLevelNumber: levelNum
+      currentLevelNumber: levelNum,
+      activeHint: null,
+      hintUsedCount: 0
     }));
     try {
       const levelData = await generateLevel(diff, levelNum);
@@ -63,6 +67,29 @@ const App: React.FC = () => {
     } catch (error) {
       console.error("Failed to load level", error);
       setState(prev => ({ ...prev, gameState: 'LOBBY' }));
+    }
+  };
+
+  const provideHint = () => {
+    if (!state.currentLevel) return;
+    
+    // Find unsolved categories
+    const unsolvedCategories = state.currentLevel.categories.filter(cat => {
+      return state.currentLevel?.words.some(w => w.categoryId === cat.id && !w.isSolved);
+    });
+
+    if (unsolvedCategories.length > 0) {
+      const randomCat = unsolvedCategories[Math.floor(Math.random() * unsolvedCategories.length)];
+      setState(prev => ({
+        ...prev,
+        activeHint: `تلميح: ${randomCat.description}`,
+        hintUsedCount: prev.hintUsedCount + 1
+      }));
+      
+      // Auto-clear hint after 5 seconds
+      setTimeout(() => {
+        setState(prev => ({ ...prev, activeHint: null }));
+      }, 5000);
     }
   };
 
@@ -96,6 +123,7 @@ const App: React.FC = () => {
               ...prev,
               currentLevel: { ...prev.currentLevel!, words: newWords },
               selectedWordIds: [],
+              activeHint: null, // Clear hint when a category is solved
               gameState: allSolved ? 'COMPLETED' : 'PLAYING'
             };
           });
@@ -231,6 +259,13 @@ const App: React.FC = () => {
 
         {state.gameState === 'PLAYING' && state.currentLevel && (
           <div className="flex-grow flex flex-col gap-2 sm:gap-4 overflow-hidden">
+            {/* Active Hint Banner */}
+            {state.activeHint && (
+              <div className="bg-amber-100 text-amber-800 px-4 py-2 rounded-xl text-center font-bold text-xs sm:text-sm shadow-sm animate-success-reveal border border-amber-200">
+                💡 {state.activeHint}
+              </div>
+            )}
+
             <div className="flex flex-wrap gap-2 justify-center min-h-[32px] sm:min-h-[48px] flex-shrink-0">
               {state.currentLevel.categories.map(cat => {
                 const isSolved = state.currentLevel?.words.filter(w => w.categoryId === cat.id).every(w => w.isSolved);
@@ -261,14 +296,24 @@ const App: React.FC = () => {
                 <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
                 مستوى {state.currentLevelNumber} • {4 - state.selectedWordIds.length} كلمات مطلوبة
               </div>
-              {state.selectedWordIds.length > 0 && (
+              
+              <div className="flex gap-4 items-center">
                 <button 
-                  onClick={() => setState(prev => ({...prev, selectedWordIds: []}))}
-                  className="text-amber-600 font-black text-[10px] sm:text-xs hover:underline uppercase tracking-tighter"
+                  onClick={provideHint}
+                  disabled={!!state.activeHint}
+                  className="text-emerald-600 font-black text-[10px] sm:text-xs hover:underline uppercase tracking-tighter flex items-center gap-1 disabled:opacity-50"
                 >
-                  إلغاء التحديد الحالي
+                  💡 طلب مساعدة
                 </button>
-              )}
+                {state.selectedWordIds.length > 0 && (
+                  <button 
+                    onClick={() => setState(prev => ({...prev, selectedWordIds: []}))}
+                    className="text-amber-600 font-black text-[10px] sm:text-xs hover:underline uppercase tracking-tighter"
+                  >
+                    إلغاء التحديد
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}

@@ -41,4 +41,6 @@ export interface AppState {
   selectedWordIds: string[];
   mistakeCount: number;
   timer: number;
+  activeHint?: string | null;
+  hintUsedCount: number;
 }
