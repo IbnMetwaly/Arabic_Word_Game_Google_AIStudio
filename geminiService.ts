@@ -14,7 +14,8 @@ const levelSchema = {
         properties: {
           id: { type: Type.STRING },
           title: { type: Type.STRING },
-          icon: { type: Type.STRING, description: "A simple emoji representing the category" },
+          icon: { type: Type.STRING, description: "A unique and highly relevant emoji representing the category (e.g. 🍎 for fruits)" },
+          color: { type: Type.STRING, description: "A distinct, vibrant CSS hex color code (e.g. #FF5733) that visually differentiates the category" },
           description: { type: Type.STRING },
           words: {
             type: Type.ARRAY,
@@ -23,9 +24,9 @@ const levelSchema = {
             maxItems: 4
           }
         },
-        required: ["id", "title", "icon", "description", "words"]
+        required: ["id", "title", "icon", "color", "description", "words"]
       },
-      minItems: 6,
+      minItems: 4,
       maxItems: 6
     }
   },
@@ -33,18 +34,20 @@ const levelSchema = {
 };
 
 export async function generateLevel(difficulty: Difficulty, levelNumber: number): Promise<GameLevel> {
+  const categoryCount = levelNumber + 3;
+  const totalWords = categoryCount * 4;
+
   const prompt = `
-    Generate a 4x6 grid game data for an Arabic word sorting game called 'Rabt'.
+    Generate a game data for an Arabic word sorting game called 'Rabt'.
     Stage: ${difficulty}.
     Level Index: ${levelNumber} of 3.
     Rules:
-    - Create 6 unique categories of 4 words each (Total 24 words).
+    - Create ${categoryCount} unique categories of 4 words each (Total ${totalWords} words).
     - Logic should follow Modern Standard Arabic (MSA).
-    - Vary the themes based on the Level Index (${levelNumber}) to ensure Level 1, 2, and 3 feel distinct.
-    - Beginner: Easy 3-4 letter words (Colors, Fruits, Simple Verbs).
-    - Intermediate: 4-6 letter words, synonyms, tools, or semantic groups.
-    - Expert: Complex morphology (Awzan), literary roots, rare but meaningful vocabulary.
+    - Each category MUST have a unique, highly relevant emoji and a distinct, vibrant HEX color that fits the theme.
+    - Vary themes: Beginner (concrete nouns like animals, food), Intermediate (abstract nouns/verbs), Expert (literary roots, rare words, historical figures).
     - Ensure strict orthographic accuracy for 'Hamza' and 'Ta Marbuta'.
+    - Words should be challenging but related by a clear, logical thread.
     - Output must be in JSON format.
   `;
 
@@ -63,6 +66,7 @@ export async function generateLevel(difficulty: Difficulty, levelNumber: number)
     id: c.id,
     title: c.title,
     icon: c.icon,
+    color: c.color,
     description: c.description
   }));
 
@@ -75,7 +79,6 @@ export async function generateLevel(difficulty: Difficulty, levelNumber: number)
     }))
   );
 
-  // Shuffle words for the grid
   const shuffledWords = [...words].sort(() => Math.random() - 0.5);
 
   return {
