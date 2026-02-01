@@ -20,75 +20,64 @@
       body {
         font-family: 'Tajawal', sans-serif;
         background-color: #FFFBEB;
-        overflow-x: hidden;
+        overflow: hidden;
         user-select: none;
         -webkit-tap-highlight-color: transparent;
         height: var(--app-height);
         margin: 0;
+        position: fixed;
+        width: 100%;
       }
       
-      /* Smoother, more organic shake with a gentle decay */
+      .safe-paddings {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+      }
+
+      /* Smoother, more organic shake */
       @keyframes shake {
-        0%, 100% { transform: translateX(0) rotate(0deg); }
-        15% { transform: translateX(-5px) rotate(-1.5deg); }
-        30% { transform: translateX(4px) rotate(1.2deg); }
-        45% { transform: translateX(-3px) rotate(-0.8deg); }
-        60% { transform: translateX(2px) rotate(0.4deg); }
-        75% { transform: translateX(-1px) rotate(-0.2deg); }
+        0%, 100% { transform: translateX(0); }
+        20% { transform: translateX(-4px) rotate(-1deg); }
+        40% { transform: translateX(4px) rotate(1deg); }
+        60% { transform: translateX(-2px); }
+        80% { transform: translateX(2px); }
       }
       .animate-shake {
-        animation: shake 0.5s cubic-bezier(0.45, 0.05, 0.55, 0.95) both;
+        animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
       }
       
-      /* Fluid selection bounce with secondary dampening */
       @keyframes selection-bounce {
         0% { transform: scale(1); }
-        35% { transform: scale(0.94); }
-        65% { transform: scale(1.06); }
-        85% { transform: scale(0.98); }
+        50% { transform: scale(0.92); }
         100% { transform: scale(1); }
       }
       .animate-selection-bounce {
-        animation: selection-bounce 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        animation: selection-bounce 0.3s ease-out forwards;
       }
       
-      @keyframes pulse-ring {
-        0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
-        70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
-      }
-      .animate-pulse-ring {
-        animation: pulse-ring 2s infinite;
-      }
-      
-      /* Solve pop that feels more "juicy" with smoother transition */
       @keyframes solve-pop {
-        0% { transform: scale(1); filter: brightness(1); }
-        40% { transform: scale(1.18); filter: brightness(1.15); box-shadow: 0 15px 25px -5px rgba(16, 185, 129, 0.4); }
-        100% { transform: scale(1); filter: brightness(1); }
+        0% { transform: scale(1); }
+        50% { transform: scale(1.15); filter: brightness(1.2); }
+        100% { transform: scale(1); }
       }
       .animate-solve-pop {
-        animation: solve-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        animation: solve-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
       }
       
-      /* Success reveal with a more natural lofted motion */
       @keyframes success-reveal {
-        0% { transform: translateY(30px) scale(0.7); opacity: 0; filter: blur(8px); }
-        60% { transform: translateY(-5px) scale(1.02); opacity: 1; filter: blur(0); }
-        100% { transform: translateY(0) scale(1); opacity: 1; filter: blur(0); }
+        0% { transform: translateY(20px); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
       }
       .animate-success-reveal {
-        animation: success-reveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        animation: success-reveal 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
       }
       
       .glossy-3d {
-        box-shadow: inset 0 2px 4px rgba(255,255,255,0.6), 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.05);
       }
       
-      input:focus {
-        font-size: 16px;
-      }
-
       .no-scrollbar::-webkit-scrollbar {
         display: none;
       }

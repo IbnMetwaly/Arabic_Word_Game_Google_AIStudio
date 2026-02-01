@@ -20,7 +20,7 @@ const App: React.FC = () => {
   });
 
   const [isWrongGroup, setIsWrongGroup] = useState(false);
-  const [isGuideOpen, setIsGuideOpen] = useState(true);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -77,7 +77,7 @@ const App: React.FC = () => {
     if (currentDiff === Difficulty.BEGINNER) return { diff: Difficulty.INTERMEDIATE, num: 1 };
     if (currentDiff === Difficulty.INTERMEDIATE) return { diff: Difficulty.EXPERT, num: 1 };
     
-    return null; // Expert 3 is the last level
+    return null;
   };
 
   const provideHint = () => {
@@ -153,7 +153,7 @@ const App: React.FC = () => {
       if (next) {
         const timer = setTimeout(() => {
           startLevel(next.diff, next.num);
-        }, 4000);
+        }, 5000);
         return () => clearTimeout(timer);
       }
     }
@@ -179,261 +179,275 @@ const App: React.FC = () => {
 
   if (!state.user) {
     return (
-      <div className="h-[100dvh] flex items-center justify-center p-4 bg-amber-50">
-        <div className="bg-white p-6 sm:p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center border-b-[10px] border-amber-100 flex flex-col gap-4">
+      <div className="h-[100dvh] flex items-center justify-center p-6 bg-amber-50">
+        <div className="bg-white p-8 rounded-[2rem] shadow-2xl max-w-sm w-full text-center border-b-[8px] border-amber-100 flex flex-col gap-6">
           <div>
-            <h1 className="text-5xl sm:text-6xl font-black text-amber-500 mb-1 drop-shadow-sm">رَبْط</h1>
-            <p className="text-slate-400 text-sm font-medium">لعبة ترتيب الكلمات العربية</p>
+            <h1 className="text-6xl font-black text-amber-500 mb-2 drop-shadow-sm">رَبْط</h1>
+            <p className="text-slate-400 text-sm font-bold">لعبة ترتيب الكلمات العربية</p>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             <input 
               type="text" 
-              placeholder="اسم المستخدم (اختياري)"
-              className="w-full px-5 py-3 rounded-2xl border-2 border-amber-100 focus:border-amber-400 outline-none text-lg text-center bg-amber-50/30 transition-all placeholder:text-slate-300"
+              placeholder="اسم المستخدم"
+              className="w-full px-6 py-4 rounded-2xl border-2 border-amber-100 focus:border-amber-400 outline-none text-lg text-center bg-amber-50/30 transition-all placeholder:text-slate-300"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleLogin((e.target as HTMLInputElement).value);
               }}
             />
-            <Button fullWidth onClick={(e) => {
+            <Button fullWidth className="py-4 text-xl" onClick={(e) => {
               const input = (e.currentTarget.previousSibling as HTMLInputElement);
               handleLogin(input.value);
             }}>ابدأ اللعب</Button>
-            <p className="text-[10px] text-slate-400">نسخة مراجعة عامة v1.0</p>
           </div>
         </div>
       </div>
     );
   }
 
-  const isFullView = state.gameState === 'PLAYING' || state.gameState === 'LOBBY';
-
-  const nextLevelInfo = state.currentLevel && state.gameState === 'COMPLETED' 
-    ? getNextLevel(state.currentLevel.difficulty, state.currentLevelNumber) 
-    : null;
+  const isLobby = state.gameState === 'LOBBY';
+  const isPlaying = state.gameState === 'PLAYING';
+  const isLoading = state.gameState === 'LOADING';
+  const isCompleted = state.gameState === 'COMPLETED';
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-amber-50/30 overflow-hidden">
-      <header className="bg-white shadow-sm z-40 px-4 py-2 sm:px-8 flex justify-between items-center border-b border-amber-100 flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl sm:text-3xl font-black text-amber-500 leading-tight">رَبْط</h1>
-              <span className="bg-amber-100 text-amber-700 text-[8px] sm:text-[10px] px-2 py-0.5 rounded-full font-black border border-amber-200">مراجعة</span>
-            </div>
-            <span className="text-[10px] sm:text-xs text-slate-400 font-bold block leading-none">مرحباً، {state.user.username}</span>
+    <div className="h-[100dvh] flex flex-col bg-amber-50/20 overflow-hidden safe-paddings">
+      <header className="bg-white/80 backdrop-blur-md shadow-sm z-50 px-4 py-3 sm:px-8 flex justify-between items-center border-b border-amber-100 flex-shrink-0">
+        <div className="flex flex-col">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-black text-amber-500 leading-none">رَبْط</h1>
+            <span className="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full font-bold">بـيـتا</span>
           </div>
+          <span className="text-[10px] text-slate-400 font-bold leading-none mt-1">المستخدم: {state.user.username}</span>
         </div>
-        <div className="flex items-center gap-2 sm:gap-4">
-          {state.gameState === 'PLAYING' && (
-            <div className="bg-amber-100 px-3 py-1 sm:px-4 sm:py-2 rounded-xl flex items-center gap-2 border-b-2 border-amber-200">
-              <span className="text-lg sm:text-xl font-black text-amber-700">{formatTime(state.timer)}</span>
-              <span className="text-[8px] sm:text-[10px] text-amber-600 font-bold uppercase tracking-wider hidden sm:inline">الوقت</span>
+        
+        <div className="flex items-center gap-2">
+          {isPlaying && (
+            <div className="bg-amber-100/50 px-3 py-1.5 rounded-xl flex items-center gap-2 border border-amber-200 shadow-inner">
+              <span className="text-base font-black text-amber-700 font-mono">{formatTime(state.timer)}</span>
             </div>
           )}
-          {state.gameState !== 'LOBBY' && (
-            <Button variant="secondary" className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm shadow-none border-b-2 border-sky-600" onClick={() => setState(prev => ({ ...prev, gameState: 'LOBBY', currentLevel: null }))}>الرئيسية</Button>
+          {!isLobby && (
+            <button 
+              className="p-2 text-slate-400 hover:text-amber-500 transition-colors"
+              onClick={() => setState(prev => ({ ...prev, gameState: 'LOBBY', currentLevel: null }))}
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+            </button>
           )}
         </div>
       </header>
 
-      <main className={`flex-grow w-full max-w-4xl mx-auto px-4 overflow-hidden flex flex-col ${isFullView ? 'py-2' : 'py-8'}`}>
-        {state.gameState === 'LOBBY' && (
-          <div className="flex-grow flex flex-col justify-center gap-2 sm:gap-4 py-1 overflow-hidden">
-            
+      <main className="flex-grow w-full max-w-2xl mx-auto flex flex-col overflow-hidden relative">
+        {isLobby && (
+          <div className="flex-grow flex flex-col p-4 gap-4 overflow-y-auto no-scrollbar">
             <div 
-              className="bg-white p-4 sm:p-5 rounded-3xl shadow-sm border border-amber-100 mx-1 sm:mx-0 cursor-pointer transition-all hover:shadow-md select-none"
+              className="bg-white p-4 rounded-3xl shadow-sm border border-amber-100 cursor-pointer transition-all active:scale-98"
               onClick={() => setIsGuideOpen(!isGuideOpen)}
             >
-               <div className="flex items-center justify-between text-amber-600">
-                 <div className="flex items-center gap-2">
-                   <span className="text-xl">💡</span>
-                   <h3 className="font-black text-sm sm:text-base">كيف تلعب؟</h3>
-                 </div>
-                 <svg 
-                   className={`w-5 h-5 transform transition-transform duration-300 ${isGuideOpen ? 'rotate-180' : ''} text-amber-400`} 
-                   fill="none" 
-                   viewBox="0 0 24 24" 
-                   stroke="currentColor"
-                 >
-                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                 </svg>
-               </div>
-               
-               <div className={`grid transition-all duration-300 ease-in-out ${isGuideOpen ? 'grid-rows-[1fr] opacity-100 mt-3' : 'grid-rows-[0fr] opacity-0 mt-0'}`}>
-                 <div className="overflow-hidden">
-                   <ul className="space-y-2">
-                     <li className="flex items-center gap-3 text-xs sm:text-sm text-slate-600 font-medium bg-amber-50/50 p-2 rounded-lg">
-                       <span className="bg-amber-100 text-amber-700 w-6 h-6 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-xs border border-amber-200">١</span>
-                       <span>ابحث عن <strong>رابط مشترك</strong> يجمع بين الكلمات.</span>
-                     </li>
-                     <li className="flex items-center gap-3 text-xs sm:text-sm text-slate-600 font-medium bg-amber-50/50 p-2 rounded-lg">
-                       <span className="bg-amber-100 text-amber-700 w-6 h-6 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-xs border border-amber-200">٢</span>
-                       <span>اضغط على <strong>٤ كلمات</strong> لتكوين مجموعة.</span>
-                     </li>
-                     <li className="flex items-center gap-3 text-xs sm:text-sm text-slate-600 font-medium bg-amber-50/50 p-2 rounded-lg">
-                       <span className="bg-amber-100 text-amber-700 w-6 h-6 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-xs border border-amber-200">٣</span>
-                       <span>لديك <strong>محاولات محدودة</strong>، كن حذراً!</span>
-                     </li>
-                   </ul>
-                 </div>
-               </div>
-            </div>
-
-            <h2 className="text-center text-xl sm:text-2xl font-black text-slate-700 mt-2">اختر المستوى</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 pb-4 overflow-y-auto no-scrollbar">
-              {(Object.keys(Difficulty) as Array<keyof typeof Difficulty>).map(diff => (
-                <div key={diff} className="bg-white p-3 sm:p-5 rounded-2xl sm:rounded-3xl shadow-lg border-b-4 sm:border-b-8 border-amber-100 flex flex-col items-center text-center group transition-transform flex-shrink-0">
-                  <div className="w-10 h-10 sm:w-16 sm:h-16 bg-amber-50 rounded-full flex items-center justify-center text-xl sm:text-3xl mb-2 group-hover:bg-amber-100 transition-colors border-2 border-dashed border-amber-200">
-                    {diff === 'BEGINNER' ? '🌱' : diff === 'INTERMEDIATE' ? '🚀' : '🧠'}
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-black text-slate-800 mb-1">
-                    {diff === 'BEGINNER' ? 'مبتدئ' : diff === 'INTERMEDIATE' ? 'متوسط' : 'خبير'}
-                  </h3>
-                  <p className="text-[10px] sm:text-xs text-slate-500 mb-3 line-clamp-2 leading-tight px-2">
-                    {diff === 'BEGINNER' ? 'كلمات بسيطة وتصنيفات واضحة جداً.' : 
-                     diff === 'INTERMEDIATE' ? 'تحديات لغوية تتطلب دقة في المعاني.' : 
-                     'مستوى متقدم يشمل البلاغة والصرف النادر.'}
-                  </p>
-                  
-                  <div className="grid grid-cols-3 gap-2 w-full mt-auto">
-                    {[1, 2, 3].map(num => (
-                      <button
-                        key={num}
-                        onClick={() => startLevel(Difficulty[diff], num)}
-                        className="bg-amber-50 hover:bg-amber-400 hover:text-white text-amber-700 font-bold py-2 rounded-xl text-xs sm:text-sm border-b-2 border-amber-200 transition-all active:scale-95"
-                      >
-                        {num}
-                      </button>
-                    ))}
-                  </div>
+              <div className="flex items-center justify-between text-amber-600">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">📖</span>
+                  <h3 className="font-black text-base">دليل اللعب السريع</h3>
                 </div>
-              ))}
+                <svg 
+                  className={`w-5 h-5 transform transition-transform duration-300 ${isGuideOpen ? 'rotate-180' : ''}`} 
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+              <div className={`grid transition-all duration-300 ${isGuideOpen ? 'grid-rows-[1fr] mt-4 opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                <div className="overflow-hidden space-y-3">
+                  {[
+                    { n: '١', t: 'اربط ٤ كلمات يجمعها معنى واحد.' },
+                    { n: '٢', t: 'هناك ٤ إلى ٦ مجموعات في كل لغز.' },
+                    { n: '٣', t: 'كل مستوى يزيد من غموض الروابط.' }
+                  ].map(item => (
+                    <div key={item.n} className="flex gap-3 items-center text-sm text-slate-600 bg-amber-50/50 p-2.5 rounded-xl border border-amber-100/50">
+                      <span className="w-6 h-6 rounded-full bg-amber-200 text-amber-800 flex items-center justify-center font-black text-xs shrink-0">{item.n}</span>
+                      <p className="font-medium">{item.t}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 pb-8">
+              <h2 className="text-xl font-black text-slate-800 text-right px-1">اختر التحدي</h2>
+              <div className="grid grid-cols-1 gap-4">
+                {(Object.keys(Difficulty) as Array<keyof typeof Difficulty>).map(diff => (
+                  <div key={diff} className="bg-white p-5 rounded-[2rem] shadow-sm border border-amber-100 flex flex-col gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-2xl border border-amber-100">
+                        {diff === 'BEGINNER' ? '🌱' : diff === 'INTERMEDIATE' ? '🔥' : '👑'}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-black text-slate-800">
+                          {diff === 'BEGINNER' ? 'مستوى الأشبال' : diff === 'INTERMEDIATE' ? 'مستوى الفرسان' : 'مستوى العباقرة'}
+                        </h3>
+                        <p className="text-xs text-slate-400 font-bold">
+                          {diff === 'BEGINNER' ? 'سهل وواضح' : diff === 'INTERMEDIATE' ? 'تفكير منطقي' : 'بلاغة وعمق'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-3">
+                      {[1, 2, 3].map(num => (
+                        <button
+                          key={num}
+                          onClick={() => startLevel(Difficulty[diff], num)}
+                          className="bg-amber-50 hover:bg-amber-400 hover:text-white text-amber-700 font-black py-3 rounded-2xl border-b-4 border-amber-200 active:translate-y-1 active:border-b-0 transition-all text-sm"
+                        >
+                          لغز {num}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
 
-        {state.gameState === 'LOADING' && (
-          <div className="flex flex-col items-center justify-center py-20 flex-grow">
-            <div className="w-16 h-16 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mb-6"></div>
-            <p className="text-2xl font-bold text-amber-600 animate-pulse">جاري تحضير اللغز...</p>
-            <p className="text-slate-400 mt-2">نحن ننشئ مستوىً ذكياً باستخدام Gemini</p>
+        {isLoading && (
+          <div className="flex-grow flex flex-col items-center justify-center p-8 text-center">
+            <div className="relative w-24 h-24 mb-8">
+              <div className="absolute inset-0 border-8 border-amber-100 rounded-full"></div>
+              <div className="absolute inset-0 border-8 border-amber-500 rounded-full border-t-transparent animate-spin"></div>
+            </div>
+            <h2 className="text-2xl font-black text-amber-600 animate-pulse mb-2">جاري التفكير...</h2>
+            <p className="text-slate-400 font-bold max-w-[200px]">الذكاء الاصطناعي يصيغ لك لغزاً فريداً الآن</p>
           </div>
         )}
 
-        {state.gameState === 'PLAYING' && state.currentLevel && (
-          <div className="flex-grow flex flex-col gap-2 sm:gap-4 overflow-hidden pb-4">
-            {state.activeHint && (
-              <div className="bg-amber-100 text-amber-800 px-4 py-2 rounded-xl text-center font-bold text-xs sm:text-sm shadow-sm animate-success-reveal border border-amber-200">
-                💡 {state.activeHint}
-              </div>
-            )}
-
-            <div className="flex flex-wrap gap-2 justify-center min-h-[32px] sm:min-h-[48px] flex-shrink-0">
+        {isPlaying && state.currentLevel && (
+          <div className="flex-grow flex flex-col p-3 sm:p-4 gap-3 overflow-hidden">
+            {/* Solved Categories (Horizontal Scroll if many) */}
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 shrink-0">
               {state.currentLevel.categories.map(cat => {
                 const isSolved = state.currentLevel?.words.filter(w => w.categoryId === cat.id).every(w => w.isSolved);
                 if (!isSolved) return null;
                 return (
-                  <div key={cat.id} 
-                       className="text-white px-3 py-1 sm:px-5 sm:py-2.5 rounded-xl sm:rounded-2xl flex items-center gap-2 sm:gap-3 shadow-lg animate-success-reveal border-b-2 sm:border-b-4"
-                       style={{ backgroundColor: cat.color, borderBottomColor: `${cat.color}99` }}>
-                    <span className="text-sm sm:text-xl">{cat.icon}</span>
-                    <span className="font-black text-[10px] sm:text-base whitespace-nowrap">{cat.title}</span>
+                  <div 
+                    key={cat.id} 
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-white shadow-sm border-b-2 shrink-0 animate-success-reveal"
+                    style={{ backgroundColor: cat.color, borderBottomColor: 'rgba(0,0,0,0.2)' }}
+                  >
+                    <span className="text-base">{cat.icon}</span>
+                    <span className="text-[10px] font-black whitespace-nowrap">{cat.title}</span>
                   </div>
                 );
               })}
             </div>
 
-            <div className="flex-grow grid grid-cols-4 sm:grid-cols-6 gap-2 sm:gap-3 md:gap-4 content-stretch overflow-hidden" style={{ gridAutoRows: '1fr' }}>
+            {/* Hint Box */}
+            <div className={`transition-all duration-300 overflow-hidden shrink-0 ${state.activeHint ? 'max-h-20 mb-2' : 'max-h-0'}`}>
+              <div className="bg-emerald-100 text-emerald-800 p-3 rounded-2xl text-center font-bold text-xs border border-emerald-200 shadow-sm">
+                💡 {state.activeHint}
+              </div>
+            </div>
+
+            {/* Main Word Grid */}
+            <div className="flex-grow grid grid-cols-4 gap-2 content-start overflow-y-auto no-scrollbar py-2">
               {state.currentLevel.words.map((word) => {
                 const category = state.currentLevel?.categories.find(c => c.id === word.categoryId);
                 const shouldShowHint = state.currentLevel?.difficulty === Difficulty.BEGINNER || word.isSolved;
                 return (
-                  <WordCard
-                    key={word.id}
-                    word={word}
-                    category={shouldShowHint ? category : undefined}
-                    isSelected={state.selectedWordIds.includes(word.id)}
-                    isWrong={isWrongGroup && state.selectedWordIds.includes(word.id)}
-                    onClick={() => toggleWordSelection(word.id)}
-                  />
+                  <div key={word.id} className="aspect-[4/5] sm:aspect-square">
+                    <WordCard
+                      word={word}
+                      category={shouldShowHint ? category : undefined}
+                      isSelected={state.selectedWordIds.includes(word.id)}
+                      isWrong={isWrongGroup && state.selectedWordIds.includes(word.id)}
+                      onClick={() => toggleWordSelection(word.id)}
+                    />
+                  </div>
                 );
               })}
             </div>
 
-            <div className="flex flex-col items-center gap-1 sm:gap-2 pt-2 flex-shrink-0">
-              <div className="text-[10px] sm:text-sm text-slate-400 font-bold bg-white px-4 py-1 sm:px-6 sm:py-2 rounded-full border border-amber-100 shadow-sm flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                مستوى {state.currentLevelNumber} • {4 - state.selectedWordIds.length} كلمات مطلوبة
+            {/* Game Controls Footer */}
+            <div className="bg-white/50 backdrop-blur-sm p-3 rounded-3xl border border-white/50 flex flex-col items-center gap-3 shrink-0 shadow-lg">
+              <div className="flex items-center justify-between w-full px-2">
+                <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-500 bg-white px-3 py-1.5 rounded-full border border-slate-100">
+                  <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+                  الأخطاء: {state.mistakeCount}
+                </div>
+                <div className="text-[11px] font-black text-amber-700">
+                   اخترت {state.selectedWordIds.length} من ٤
+                </div>
               </div>
               
-              <div className="flex gap-4 items-center">
+              <div className="flex gap-2 w-full">
                 <button 
                   onClick={provideHint}
                   disabled={!!state.activeHint || state.hintUsedCount >= 3}
-                  className="text-emerald-600 font-black text-[10px] sm:text-xs hover:underline uppercase tracking-tighter flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 bg-emerald-50 text-emerald-700 py-3 rounded-2xl font-black text-xs border-b-2 border-emerald-200 active:translate-y-0.5 active:border-b-0 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
                 >
-                  💡 مساعدة ({3 - state.hintUsedCount} متبقي)
+                  💡 مساعدة ({3 - state.hintUsedCount})
                 </button>
-                {state.selectedWordIds.length > 0 && (
-                  <button 
-                    onClick={() => setState(prev => ({...prev, selectedWordIds: []}))}
-                    className="text-amber-600 font-black text-[10px] sm:text-xs hover:underline uppercase tracking-tighter"
-                  >
-                    إلغاء التحديد
-                  </button>
-                )}
+                <button 
+                  onClick={() => setState(prev => ({...prev, selectedWordIds: []}))}
+                  disabled={state.selectedWordIds.length === 0}
+                  className="flex-1 bg-amber-50 text-amber-700 py-3 rounded-2xl font-black text-xs border-b-2 border-amber-200 active:translate-y-0.5 active:border-b-0 transition-all disabled:opacity-30"
+                >
+                  إلغاء التحديد
+                </button>
               </div>
             </div>
           </div>
         )}
 
-        {state.gameState === 'COMPLETED' && (
-          <div className="bg-white p-6 sm:p-10 rounded-[2.5rem] sm:rounded-[4rem] shadow-2xl text-center relative overflow-hidden border-b-[8px] sm:border-b-[15px] border-amber-100 flex-grow flex flex-col justify-center overflow-y-auto no-scrollbar">
+        {isCompleted && (
+          <div className="flex-grow flex flex-col p-6 items-center justify-center text-center">
             <Confetti />
-            <div className="relative z-10 py-4">
-              <div className="text-6xl sm:text-8xl mb-4 sm:mb-6 animate-bounce">🥇</div>
-              <h2 className="text-3xl sm:text-5xl font-black text-emerald-600 mb-2 sm:mb-4">إنجاز رائع!</h2>
-              <p className="text-base sm:text-xl text-slate-600 mb-6 sm:mb-8 font-medium px-4">لقد أتممت الربط بنجاح في وقت قياسي.</p>
+            <div className="bg-white p-8 rounded-[3rem] shadow-2xl border-b-[12px] border-amber-100 w-full animate-success-reveal relative z-10">
+              <div className="text-7xl mb-4">🏆</div>
+              <h2 className="text-4xl font-black text-amber-600 mb-2">رائع جداً!</h2>
+              <p className="text-slate-500 font-bold mb-8 italic">"خير الكلام ما قلّ ودلّ"</p>
               
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mb-8 sm:mb-10">
-                <div className="bg-amber-50 p-4 sm:p-6 rounded-3xl min-w-[120px] sm:min-w-[180px] border-b-4 border-amber-200">
-                  <div className="text-[8px] sm:text-xs text-amber-600 font-black mb-1 uppercase">الوقت النهائي</div>
-                  <div className="text-2xl sm:text-4xl font-black text-amber-900">{formatTime(state.timer)}</div>
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                <div className="bg-amber-50 p-4 rounded-3xl border border-amber-100">
+                  <div className="text-[10px] text-amber-600 font-black mb-1">الزمن المستغرق</div>
+                  <div className="text-2xl font-black text-amber-900 font-mono">{formatTime(state.timer)}</div>
                 </div>
-                <div className="bg-rose-50 p-4 sm:p-6 rounded-3xl min-w-[120px] sm:min-w-[180px] border-b-4 border-rose-200">
-                  <div className="text-[8px] sm:text-xs text-rose-600 font-black mb-1 uppercase">المحاولات الخاطئة</div>
-                  <div className="text-2xl sm:text-4xl font-black text-rose-900">{state.mistakeCount}</div>
+                <div className="bg-rose-50 p-4 rounded-3xl border border-rose-100">
+                  <div className="text-[10px] text-rose-600 font-black mb-1">المحاولات</div>
+                  <div className="text-2xl font-black text-rose-900 font-mono">{state.mistakeCount}</div>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-                {nextLevelInfo ? (
-                  <>
-                     <Button variant="primary" className="text-lg sm:text-xl px-6 sm:px-10" onClick={() => startLevel(nextLevelInfo.diff, nextLevelInfo.num)}>
-                       التالي فوراً
-                       <span className="block text-[10px] font-normal opacity-70">الانتقال التلقائي...</span>
-                     </Button>
-                     <Button variant="secondary" className="text-lg sm:text-xl px-6 sm:px-10" onClick={() => setState(prev => ({ ...prev, gameState: 'LOBBY' }))}>القائمة</Button>
-                  </>
+              <div className="space-y-3">
+                {getNextLevel(state.currentLevel!.difficulty, state.currentLevelNumber) ? (
+                  <Button fullWidth className="py-4 text-lg" onClick={() => {
+                    const next = getNextLevel(state.currentLevel!.difficulty, state.currentLevelNumber);
+                    if (next) startLevel(next.diff, next.num);
+                  }}>
+                    اللغز التالي
+                  </Button>
                 ) : (
-                  <>
-                    <Button variant="primary" className="text-lg sm:text-xl px-6 sm:px-10" onClick={() => startLevel(Difficulty.BEGINNER, 1)}>العب مجدداً</Button>
-                    <Button variant="secondary" className="text-lg sm:text-xl px-6 sm:px-10" onClick={shareResult}>مشاركة</Button>
-                    <Button variant="success" className="text-lg sm:text-xl px-6 sm:px-10" onClick={() => setState(prev => ({ ...prev, gameState: 'LOBBY' }))}>القائمة الرئيسية</Button>
-                  </>
+                  <Button variant="success" fullWidth className="py-4 text-lg" onClick={() => setState(prev => ({...prev, gameState: 'LOBBY'}))}>
+                    تمت اللعبة! عودة للقائمة
+                  </Button>
                 )}
+                <button 
+                  onClick={shareResult}
+                  className="text-amber-600 font-black text-sm hover:underline py-2"
+                >
+                  تحدّ أصدقاءك بالنتيجة
+                </button>
               </div>
             </div>
           </div>
         )}
       </main>
 
-      {!isFullView && (
-        <footer className="max-w-4xl mx-auto mt-auto px-4 py-6 text-center flex-shrink-0">
-          <div className="h-px bg-gradient-to-r from-transparent via-amber-200 to-transparent mb-4"></div>
-          <p className="text-slate-400 text-[10px] sm:text-xs leading-relaxed font-medium">
-            لعبة رَبْط التعليمية تهدف لتعزيز المفردات العربية.<br/>
-            تم تطوير هذه النسخة لأغراض المراجعة والتقييم.
+      {isLobby && (
+        <footer className="p-4 text-center border-t border-amber-100/50 flex-shrink-0">
+          <p className="text-[10px] text-slate-400 font-bold tracking-tight">
+            رَبْط © ٢٠٢٤ • صُنِع بشغف للغة الضاد
           </p>
         </footer>
       )}

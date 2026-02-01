@@ -19,30 +19,27 @@ export const WordCard: React.FC<WordCardProps> = ({ word, category, isSelected, 
       return "bg-rose-500 border-rose-700 text-white animate-shake glossy-3d z-20";
     }
     if (isSelected) {
-      return "bg-amber-500 border-amber-700 text-white shadow-xl animate-selection-bounce glossy-3d z-10 ring-4 ring-amber-200/50";
+      return "bg-amber-400 border-amber-600 text-amber-900 shadow-xl animate-selection-bounce glossy-3d z-10 ring-4 ring-amber-200/50";
     }
-    return "bg-white border-amber-200 text-slate-700 hover:border-amber-400 hover:shadow-md cursor-pointer glossy-3d active:scale-95";
+    return "bg-white border-amber-100 text-slate-700 hover:border-amber-300 hover:shadow-md cursor-pointer glossy-3d active:scale-95";
   };
 
   const solvedStyle = word.isSolved && category ? {
-    backgroundColor: `${category.color}15`, // Very light version for background
+    backgroundColor: `${category.color}20`,
     borderColor: category.color,
     color: category.color,
     borderBottomWidth: '4px'
   } : {};
 
-  // Calculate visual length by stripping Arabic diacritics (Tashkeel)
-  // This ensures short words with many vowels get the large font size they deserve
+  // Strip Tashkeel for length calculation
   const visualLength = word.text.replace(/[\u064B-\u065F\u0670]/g, '').length;
 
   const getFontSizeClass = (len: number) => {
-    // Mobile sizes are slightly conservative to prevent overflow
-    // sm/md sizes scale up aggressively to fill the box
-    if (len <= 3) return "text-xl sm:text-3xl md:text-4xl";
-    if (len <= 5) return "text-lg sm:text-2xl md:text-3xl";
-    if (len <= 7) return "text-base sm:text-xl md:text-2xl";
-    // Fallback for long words
-    return "text-[11px] sm:text-lg md:text-xl";
+    // Aggressive mobile fitting
+    if (len <= 3) return "text-xl sm:text-2xl md:text-3xl";
+    if (len <= 5) return "text-lg sm:text-xl md:text-2xl";
+    if (len <= 7) return "text-base sm:text-lg md:text-xl";
+    return "text-[12px] sm:text-base md:text-lg";
   };
 
   return (
@@ -51,46 +48,43 @@ export const WordCard: React.FC<WordCardProps> = ({ word, category, isSelected, 
       style={solvedStyle}
       className={`
         relative ${getStyles()}
-        h-full w-full flex items-center justify-center p-0.5 sm:p-2
-        border-b-4 rounded-xl select-none
-        transform transition-all duration-200 ease-out
-        min-h-[60px] sm:min-h-[80px]
+        h-full w-full flex items-center justify-center p-1.5
+        border-b-4 rounded-2xl select-none
+        transform transition-all duration-150 ease-out
       `}
     >
-      {/* Subtle Category Dot (Visual Indicator) */}
+      {/* Beginner Category Dot */}
       {!word.isSolved && category && (
         <div 
-          className="absolute bottom-2 left-2 w-1.5 h-1.5 sm:w-2.5 sm:h-2.5 rounded-full shadow-sm ring-1 sm:ring-2 ring-white"
+          className="absolute bottom-1.5 left-1.5 w-1.5 h-1.5 rounded-full shadow-sm ring-1 ring-white/50"
           style={{ backgroundColor: category.color }}
-          title="Category Indicator"
         />
       )}
 
-      {/* Category Icon Badge (Only when solved) */}
+      {/* Solved Icon */}
       {word.isSolved && category && (
         <div 
-          className="absolute top-1 right-1 sm:top-2 sm:right-2 w-5 h-5 sm:w-8 sm:h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-[10px] sm:text-lg border-2"
-          style={{ borderColor: category.color }}
+          className="absolute top-1 right-1 w-5 h-5 rounded-lg bg-white/80 backdrop-blur shadow-sm flex items-center justify-center text-[10px] border border-black/5"
         >
           {category.icon}
         </div>
       )}
 
-      {/* Selection Indicator */}
+      {/* Selection Tick */}
       {isSelected && !word.isSolved && (
-        <div className="absolute top-1 right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center animate-bounce shadow-sm sm:w-4 sm:h-4">
-          <div className="w-1.5 h-1.5 bg-amber-600 rounded-full sm:w-2 sm:h-2" />
+        <div className="absolute top-1.5 right-1.5 w-3 h-3 bg-white rounded-full flex items-center justify-center shadow-sm">
+          <div className="w-1.5 h-1.5 bg-amber-600 rounded-full" />
         </div>
       )}
       
       <span className={`
-        font-bold 
-        leading-none
+        font-black 
+        leading-tight
         whitespace-nowrap
         text-center
         w-full
         ${getFontSizeClass(visualLength)}
-        ${word.isSolved ? 'opacity-80 scale-90 transition-transform' : ''}
+        ${word.isSolved ? 'scale-90 opacity-70' : ''}
       `}>
         {word.text}
       </span>
