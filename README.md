@@ -8,6 +8,9 @@ This contains everything you need to run your app locally.
 
 View your app in AI Studio: https://ai.studio/apps/drive/1hjbD5Splm77oNhgUMt_cRXuPbIeOltMy
 
+## Run on Vercel
+https://arabic-word-game-google-ai-studio.vercel.app/
+
 ## Run Locally
 
 **Prerequisites:**  Node.js
