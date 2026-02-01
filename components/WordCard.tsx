@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { Word, Category } from '../types';
 
 interface WordCardProps {
@@ -10,7 +10,7 @@ interface WordCardProps {
   onClick: () => void;
 }
 
-export const WordCard: React.FC<WordCardProps> = ({ word, category, isSelected, isWrong, onClick }) => {
+const WordCardComponent: React.FC<WordCardProps> = ({ word, category, isSelected, isWrong, onClick }) => {
   const getStyles = () => {
     if (word.isSolved && category) {
       return "opacity-90 cursor-default shadow-sm animate-solve-pop z-0";
@@ -48,9 +48,11 @@ export const WordCard: React.FC<WordCardProps> = ({ word, category, isSelected, 
       style={solvedStyle}
       className={`
         relative ${getStyles()}
-        h-full w-full flex items-center justify-center p-1.5
+        h-full w-full flex items-center justify-center p-1 sm:p-1.5
         border-b-4 rounded-2xl select-none
         transform transition-all duration-150 ease-out
+        touch-manipulation
+        ${!word.isSolved ? 'min-h-[44px]' : ''}
       `}
     >
       {/* Beginner Category Dot */}
@@ -91,3 +93,14 @@ export const WordCard: React.FC<WordCardProps> = ({ word, category, isSelected, 
     </div>
   );
 };
+
+// Memoize to prevent unnecessary re-renders
+export const WordCard = memo(WordCardComponent, (prev, next) => {
+  return (
+    prev.word.id === next.word.id &&
+    prev.word.isSolved === next.word.isSolved &&
+    prev.isSelected === next.isSelected &&
+    prev.isWrong === next.isWrong &&
+    prev.category?.id === next.category?.id
+  );
+});
