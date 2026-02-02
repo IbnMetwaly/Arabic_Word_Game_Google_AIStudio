@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo, memo } from 'react';
 import { Difficulty, GameLevel, AppState, Word, Category } from './types';
 import { generateLevel } from './geminiService';
 import { WordCard } from './components/WordCard';
@@ -22,6 +22,13 @@ const App: React.FC = () => {
   const [isWrongGroup, setIsWrongGroup] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     const savedUser = localStorage.getItem('rabt_user');
@@ -71,16 +78,16 @@ const App: React.FC = () => {
     }
   }, []);
 
-  const getNextLevel = (currentDiff: Difficulty, currentNum: number) => {
+  const getNextLevel = useCallback((currentDiff: Difficulty, currentNum: number) => {
     if (currentNum < 3) return { diff: currentDiff, num: currentNum + 1 };
     
     if (currentDiff === Difficulty.BEGINNER) return { diff: Difficulty.INTERMEDIATE, num: 1 };
     if (currentDiff === Difficulty.INTERMEDIATE) return { diff: Difficulty.EXPERT, num: 1 };
     
     return null;
-  };
+  }, []);
 
-  const provideHint = () => {
+  const provideHint = useCallback(() => {
     if (!state.currentLevel || state.hintUsedCount >= 3) return;
     
     const unsolvedCategories = state.currentLevel.categories.filter(cat => {
@@ -99,17 +106,18 @@ const App: React.FC = () => {
         setState(prev => ({ ...prev, activeHint: null }));
       }, 8000);
     }
-  };
+  }, [state.currentLevel, state.hintUsedCount]);
 
-  const toggleWordSelection = (wordId: string) => {
-    if (state.selectedWordIds.includes(wordId)) {
-      setState(prev => ({ ...prev, selectedWordIds: prev.selectedWordIds.filter(id => id !== wordId) }));
-    } else {
-      if (state.selectedWordIds.length < 4) {
-        setState(prev => ({ ...prev, selectedWordIds: [...prev.selectedWordIds, wordId] }));
+  const toggleWordSelection = useCallback((wordId: string) => {
+    setState(prev => {
+      if (prev.selectedWordIds.includes(wordId)) {
+        return { ...prev, selectedWordIds: prev.selectedWordIds.filter(id => id !== wordId) };
+      } else if (prev.selectedWordIds.length < 4) {
+        return { ...prev, selectedWordIds: [...prev.selectedWordIds, wordId] };
       }
-    }
-  };
+      return prev;
+    });
+  }, []);
 
   useEffect(() => {
     if (state.selectedWordIds.length === 4 && state.currentLevel) {
@@ -157,13 +165,13 @@ const App: React.FC = () => {
         return () => clearTimeout(timer);
       }
     }
-  }, [state.gameState, state.currentLevel, state.currentLevelNumber, startLevel]);
+  }, [state.gameState, state.currentLevel, state.currentLevelNumber, startLevel, getNextLevel]);
 
-  const formatTime = (seconds: number) => {
+  const formatTime = useCallback((seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m}:${s.toString().padStart(2, '0')}`;
-  };
+  }, []);
 
   const shareResult = async () => {
     const text = `أنهيت المستوى ${state.currentLevelNumber} في لعبة رَبْط خلال ${formatTime(state.timer)}! جربها الآن.`;
@@ -179,22 +187,22 @@ const App: React.FC = () => {
 
   if (!state.user) {
     return (
-      <div className="h-[100dvh] flex items-center justify-center p-6 bg-amber-50">
-        <div className="bg-white p-8 rounded-[2rem] shadow-2xl max-w-sm w-full text-center border-b-[8px] border-amber-100 flex flex-col gap-6">
+      <div className="h-[100dvh] flex items-center justify-center p-4 sm:p-6 bg-amber-50">
+        <div className="bg-white p-6 sm:p-8 rounded-[2rem] shadow-2xl max-w-sm w-full text-center border-b-[8px] border-amber-100 flex flex-col gap-6">
           <div>
-            <h1 className="text-6xl font-black text-amber-500 mb-2 drop-shadow-sm">رَبْط</h1>
+            <h1 className="text-5xl sm:text-6xl font-black text-amber-500 mb-2 drop-shadow-sm">رَبْط</h1>
             <p className="text-slate-400 text-sm font-bold">لعبة ترتيب الكلمات العربية</p>
           </div>
           <div className="space-y-4">
             <input 
               type="text" 
               placeholder="اسم المستخدم"
-              className="w-full px-6 py-4 rounded-2xl border-2 border-amber-100 focus:border-amber-400 outline-none text-lg text-center bg-amber-50/30 transition-all placeholder:text-slate-300"
+              className="w-full px-4 sm:px-6 py-3.5 sm:py-4 rounded-2xl border-2 border-amber-100 focus:border-amber-400 outline-none text-base sm:text-lg text-center bg-amber-50/30 transition-all placeholder:text-slate-300 touch-manipulation"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleLogin((e.target as HTMLInputElement).value);
               }}
             />
-            <Button fullWidth className="py-4 text-xl" onClick={(e) => {
+            <Button fullWidth className="py-3.5 sm:py-4 text-lg sm:text-xl min-h-[44px]" onClick={(e) => {
               const input = (e.currentTarget.previousSibling as HTMLInputElement);
               handleLogin(input.value);
             }}>ابدأ اللعب</Button>
@@ -209,9 +217,14 @@ const App: React.FC = () => {
   const isLoading = state.gameState === 'LOADING';
   const isCompleted = state.gameState === 'COMPLETED';
 
+  // Memoize unsolved words for performance
+  const unsolvedWords = useMemo(() => {
+    return state.currentLevel?.words.filter(w => !w.isSolved) || [];
+  }, [state.currentLevel?.words]);
+
   return (
     <div className="h-[100dvh] flex flex-col bg-amber-50/20 overflow-hidden safe-paddings">
-      <header className="bg-white/80 backdrop-blur-md shadow-sm z-50 px-4 py-3 sm:px-8 flex justify-between items-center border-b border-amber-100 flex-shrink-0">
+      <header className="bg-white/80 backdrop-blur-md shadow-sm z-50 px-3 sm:px-4 md:px-8 py-2.5 sm:py-3 flex justify-between items-center border-b border-amber-100 flex-shrink-0">
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black text-amber-500 leading-none">رَبْط</h1>
@@ -222,8 +235,8 @@ const App: React.FC = () => {
         
         <div className="flex items-center gap-2">
           {isPlaying && (
-            <div className="bg-amber-100/50 px-3 py-1.5 rounded-xl flex items-center gap-2 border border-amber-200 shadow-inner">
-              <span className="text-base font-black text-amber-700 font-mono">{formatTime(state.timer)}</span>
+            <div className="bg-amber-100/50 px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center gap-2 border border-amber-200 shadow-inner">
+              <span className="text-sm sm:text-base font-black text-amber-700 font-mono">{formatTime(state.timer)}</span>
             </div>
           )}
           {!isLobby && (
@@ -293,12 +306,12 @@ const App: React.FC = () => {
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-3 gap-2.5 sm:gap-3 touch-manipulation">
                       {[1, 2, 3].map(num => (
                         <button
                           key={num}
                           onClick={() => startLevel(Difficulty[diff], num)}
-                          className="bg-amber-50 hover:bg-amber-400 hover:text-white text-amber-700 font-black py-3 rounded-2xl border-b-4 border-amber-200 active:translate-y-1 active:border-b-0 transition-all text-sm"
+                          className="bg-amber-50 hover:bg-amber-400 hover:text-white text-amber-700 font-black py-3 sm:py-3.5 rounded-2xl border-b-4 border-amber-200 active:translate-y-1 active:border-b-0 transition-all text-sm min-h-[44px]"
                         >
                           لغز {num}
                         </button>
@@ -349,8 +362,8 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Main Word Grid */}
-            <div className="flex-grow grid grid-cols-4 gap-2 content-start overflow-y-auto no-scrollbar py-2">
+            {/* Main Word Grid - Optimized for mobile */}
+            <div className="flex-grow grid grid-cols-4 gap-1.5 sm:gap-2 content-start overflow-y-auto no-scrollbar py-2 touch-manipulation">
               {state.currentLevel.words.map((word) => {
                 const category = state.currentLevel?.categories.find(c => c.id === word.categoryId);
                 const shouldShowHint = state.currentLevel?.difficulty === Difficulty.BEGINNER || word.isSolved;
@@ -369,29 +382,29 @@ const App: React.FC = () => {
             </div>
 
             {/* Game Controls Footer */}
-            <div className="bg-white/50 backdrop-blur-sm p-3 rounded-3xl border border-white/50 flex flex-col items-center gap-3 shrink-0 shadow-lg">
+            <div className="bg-white/50 backdrop-blur-sm p-2.5 sm:p-3 rounded-3xl border border-white/50 flex flex-col items-center gap-2.5 sm:gap-3 shrink-0 shadow-lg">
               <div className="flex items-center justify-between w-full px-2">
-                <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-500 bg-white px-3 py-1.5 rounded-full border border-slate-100">
+                <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-500 bg-white px-2.5 sm:px-3 py-1.5 rounded-full border border-slate-100">
                   <span className="w-2 h-2 rounded-full bg-rose-400"></span>
                   الأخطاء: {state.mistakeCount}
                 </div>
-                <div className="text-[11px] font-black text-amber-700">
+                <div className="text-[10px] sm:text-[11px] font-black text-amber-700">
                    اخترت {state.selectedWordIds.length} من ٤
                 </div>
               </div>
               
-              <div className="flex gap-2 w-full">
+              <div className="flex gap-2 w-full touch-manipulation">
                 <button 
                   onClick={provideHint}
                   disabled={!!state.activeHint || state.hintUsedCount >= 3}
-                  className="flex-1 bg-emerald-50 text-emerald-700 py-3 rounded-2xl font-black text-xs border-b-2 border-emerald-200 active:translate-y-0.5 active:border-b-0 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
+                  className="flex-1 bg-emerald-50 text-emerald-700 py-2.5 sm:py-3 rounded-2xl font-black text-xs border-b-2 border-emerald-200 active:translate-y-0.5 active:border-b-0 transition-all disabled:opacity-30 flex items-center justify-center gap-2 min-h-[44px]"
                 >
                   💡 مساعدة ({3 - state.hintUsedCount})
                 </button>
                 <button 
                   onClick={() => setState(prev => ({...prev, selectedWordIds: []}))}
                   disabled={state.selectedWordIds.length === 0}
-                  className="flex-1 bg-amber-50 text-amber-700 py-3 rounded-2xl font-black text-xs border-b-2 border-amber-200 active:translate-y-0.5 active:border-b-0 transition-all disabled:opacity-30"
+                  className="flex-1 bg-amber-50 text-amber-700 py-2.5 sm:py-3 rounded-2xl font-black text-xs border-b-2 border-amber-200 active:translate-y-0.5 active:border-b-0 transition-all disabled:opacity-30 min-h-[44px]"
                 >
                   إلغاء التحديد
                 </button>
