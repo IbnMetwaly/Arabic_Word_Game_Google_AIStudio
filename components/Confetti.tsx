@@ -1,24 +1,20 @@
 
-import React, { useEffect, useState, useMemo, memo } from 'react';
+import React, { useEffect, useState } from 'react';
 
-export const Confetti: React.FC = memo(() => {
+export const Confetti: React.FC = () => {
   const [pieces, setPieces] = useState<any[]>([]);
 
-  // Memoize colors and shapes arrays
-  const colors = useMemo(() => [
-    '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981', 
-    '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#f43f5e',
-    '#FFD700', '#FF69B4', '#00FFFF', '#FF4500', '#32CD32'
-  ], []);
-  
-  const shapes = useMemo(() => ['circle', 'square', 'rect'], []);
-
   useEffect(() => {
-    // Reduce pieces count on mobile for better performance
-    const pieceCount = window.innerWidth < 640 ? 100 : 200;
+    // Extended vibrant color palette
+    const colors = [
+      '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981', 
+      '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#f43f5e',
+      '#FFD700', '#FF69B4', '#00FFFF', '#FF4500', '#32CD32'
+    ];
+    const shapes = ['circle', 'square', 'rect'];
     
     // Generate pieces with more natural physics variables
-    const newPieces = Array.from({ length: pieceCount }).map((_, i) => {
+    const newPieces = Array.from({ length: 200 }).map((_, i) => {
       // Burst originates from bottom-center/middle
       // Angle: mostly upwards (between -PI/6 and -5PI/6)
       const angle = -Math.PI / 2 + (Math.random() - 0.5) * 2; 
@@ -41,7 +37,7 @@ export const Confetti: React.FC = memo(() => {
       };
     });
     setPieces(newPieces);
-  }, [colors, shapes]);
+  }, []);
 
   return (
     <div className="fixed inset-0 pointer-events-none z-[100] overflow-hidden">
@@ -93,4 +89,4 @@ export const Confetti: React.FC = memo(() => {
       `}</style>
     </div>
   );
-});
+};

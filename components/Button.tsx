@@ -1,12 +1,12 @@
 
-import React, { memo } from 'react';
+import React from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'success' | 'danger';
   fullWidth?: boolean;
 }
 
-export const Button: React.FC<ButtonProps> = memo(({ 
+export const Button: React.FC<ButtonProps> = ({ 
   children, 
   variant = 'primary', 
   fullWidth = false, 
@@ -30,4 +30,4 @@ export const Button: React.FC<ButtonProps> = memo(({
       {children}
     </button>
   );
-});
+};
