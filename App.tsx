@@ -20,6 +20,7 @@ const App: React.FC = () => {
   });
 
   const [isWrongGroup, setIsWrongGroup] = useState(false);
+  const [usernameInput, setUsernameInput] = useState("");
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -190,13 +191,14 @@ const App: React.FC = () => {
               type="text" 
               placeholder="اسم المستخدم"
               className="w-full px-6 py-4 rounded-2xl border-2 border-amber-100 focus:border-amber-400 outline-none text-lg text-center bg-amber-50/30 transition-all placeholder:text-slate-300"
+              value={usernameInput}
+              onChange={(e) => setUsernameInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') handleLogin((e.target as HTMLInputElement).value);
+                if (e.key === 'Enter') handleLogin(usernameInput);
               }}
             />
             <Button fullWidth className="py-4 text-xl" onClick={(e) => {
-              const input = (e.currentTarget.previousSibling as HTMLInputElement);
-              handleLogin(input.value);
+              handleLogin(usernameInput);
             }}>ابدأ اللعب</Button>
           </div>
         </div>
