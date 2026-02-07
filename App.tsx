@@ -5,6 +5,7 @@ import { generateLevel } from './geminiService';
 import { WordCard } from './components/WordCard';
 import { Button } from './components/Button';
 import { Confetti } from './components/Confetti';
+import { audioService } from './audioService';
 
 const App: React.FC = () => {
   const [state, setState] = useState<AppState>({
@@ -17,19 +18,38 @@ const App: React.FC = () => {
     timer: 0,
     activeHint: null,
     hintUsedCount: 0,
+    isMuted: false,
   });
 
   const [isWrongGroup, setIsWrongGroup] = useState(false);
-  const [usernameInput, setUsernameInput] = useState("");
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Initialize Audio and User
   useEffect(() => {
     const savedUser = localStorage.getItem('rabt_user');
+    const savedMute = localStorage.getItem('rabt_muted');
+    
+    const isMuted = savedMute === 'true';
+    audioService.setMute(isMuted);
+
     if (savedUser) {
-      setState(prev => ({ ...prev, user: JSON.parse(savedUser) }));
+      setState(prev => ({ 
+        ...prev, 
+        user: JSON.parse(savedUser),
+        isMuted
+      }));
+    } else {
+      setState(prev => ({ ...prev, isMuted }));
     }
   }, []);
+
+  const toggleMute = () => {
+    const newMutedState = !state.isMuted;
+    setState(prev => ({ ...prev, isMuted: newMutedState }));
+    audioService.setMute(newMutedState);
+    localStorage.setItem('rabt_muted', String(newMutedState));
+  };
 
   const handleLogin = (username: string) => {
     const finalUsername = username.trim() || "لاعب";
@@ -95,6 +115,7 @@ const App: React.FC = () => {
         activeHint: `تلميح: ${randomCat.title} - ${randomCat.description}`,
         hintUsedCount: prev.hintUsedCount + 1
       }));
+      audioService.play('pop');
       
       setTimeout(() => {
         setState(prev => ({ ...prev, activeHint: null }));
@@ -104,9 +125,11 @@ const App: React.FC = () => {
 
   const toggleWordSelection = (wordId: string) => {
     if (state.selectedWordIds.includes(wordId)) {
+      audioService.play('pop');
       setState(prev => ({ ...prev, selectedWordIds: prev.selectedWordIds.filter(id => id !== wordId) }));
     } else {
       if (state.selectedWordIds.length < 4) {
+        audioService.play('pop');
         setState(prev => ({ ...prev, selectedWordIds: [...prev.selectedWordIds, wordId] }));
       }
     }
@@ -119,6 +142,7 @@ const App: React.FC = () => {
       const isMatch = words.every(w => w.categoryId === firstCatId);
 
       if (isMatch) {
+        audioService.play('correct');
         setTimeout(() => {
           setState(prev => {
             const newWords = prev.currentLevel!.words.map(w => 
@@ -138,6 +162,7 @@ const App: React.FC = () => {
           });
         }, 300);
       } else {
+        audioService.play('wrong');
         setIsWrongGroup(true);
         setState(prev => ({ ...prev, mistakeCount: prev.mistakeCount + 1 }));
         setTimeout(() => {
@@ -150,6 +175,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (state.gameState === 'COMPLETED' && state.currentLevel) {
+      audioService.play('win');
       const next = getNextLevel(state.currentLevel.difficulty, state.currentLevelNumber);
       if (next) {
         const timer = setTimeout(() => {
@@ -191,14 +217,13 @@ const App: React.FC = () => {
               type="text" 
               placeholder="اسم المستخدم"
               className="w-full px-6 py-4 rounded-2xl border-2 border-amber-100 focus:border-amber-400 outline-none text-lg text-center bg-amber-50/30 transition-all placeholder:text-slate-300"
-              value={usernameInput}
-              onChange={(e) => setUsernameInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') handleLogin(usernameInput);
+                if (e.key === 'Enter') handleLogin((e.target as HTMLInputElement).value);
               }}
             />
             <Button fullWidth className="py-4 text-xl" onClick={(e) => {
-              handleLogin(usernameInput);
+              const input = (e.currentTarget.previousSibling as HTMLInputElement);
+              handleLogin(input.value);
             }}>ابدأ اللعب</Button>
           </div>
         </div>
@@ -228,6 +253,24 @@ const App: React.FC = () => {
               <span className="text-base font-black text-amber-700 font-mono">{formatTime(state.timer)}</span>
             </div>
           )}
+          
+          <button
+            onClick={toggleMute}
+            className={`p-2 rounded-xl transition-colors ${state.isMuted ? 'text-slate-400 bg-slate-100' : 'text-amber-500 bg-amber-50'}`}
+            title={state.isMuted ? "تشغيل الصوت" : "كتم الصوت"}
+          >
+             {state.isMuted ? (
+               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                 <path strokeLinecap="round" strokeLinejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" clipRule="evenodd" />
+                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+               </svg>
+             ) : (
+               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+               </svg>
+             )}
+          </button>
+
           {!isLobby && (
             <button 
               className="p-2 text-slate-400 hover:text-amber-500 transition-colors"

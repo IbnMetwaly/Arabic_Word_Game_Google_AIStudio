@@ -21,7 +21,8 @@ export const WordCard: React.FC<WordCardProps> = ({ word, category, isSelected, 
     if (isSelected) {
       return "bg-amber-400 border-amber-600 text-amber-900 shadow-xl animate-selection-bounce glossy-3d z-10 ring-4 ring-amber-200/50";
     }
-    return "bg-white border-amber-100 text-slate-700 hover:border-amber-300 hover:shadow-md cursor-pointer glossy-3d active:scale-95";
+    // Added hover:scale-[1.02] and hover:shadow-lg
+    return "bg-white border-amber-100 text-slate-700 hover:border-amber-300 hover:shadow-lg hover:scale-[1.02] cursor-pointer glossy-3d active:scale-95";
   };
 
   const solvedStyle = word.isSolved && category ? {

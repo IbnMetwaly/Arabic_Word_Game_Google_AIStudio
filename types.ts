@@ -44,4 +44,5 @@ export interface AppState {
   timer: number;
   activeHint?: string | null;
   hintUsedCount: number;
+  isMuted: boolean;
 }
